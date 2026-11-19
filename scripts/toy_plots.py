@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm, TwoSlopeNorm
 
 
-def plot_run(run, *, world=0, mask=0, coverages=(0., .1, .5, 1.),
+def plot_run(run, *, world=0, mask=0, coverages=None,
              heatmap_cmap='viridis_r', error_cmap='RdBu_r', save_files=True, show=True):
     """Export fixed-truth matrices and world-level coverage summaries; no simulation."""
     OUT = Path(run)
@@ -15,6 +15,13 @@ def plot_run(run, *, world=0, mask=0, coverages=(0., .1, .5, 1.),
         raise ValueError('Load a complete toy run before plotting.')
     USED = json.loads((OUT/'protocol.json').read_text())['config']
     WORLD, MASK = world, mask
+    if coverages is None:
+        thirds = [0., 1/3, 2/3, 1.]
+        if all(q in USED['coverages'] for q in thirds):
+            coverages = thirds
+        else:
+            coverages = [q for q in (0., .1, .5, 1.) if q in USED['coverages']]
+            print('Archived run without both thirds. Showing saved coverage levels:', coverages)
     SHOW_COVERAGES = list(coverages)
     if not 0 <= world < USED['worlds'] or not 0 <= mask < USED['masks']:
         raise ValueError('world or mask is outside the saved run limits')
